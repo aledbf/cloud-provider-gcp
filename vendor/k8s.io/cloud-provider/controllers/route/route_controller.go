@@ -178,6 +178,7 @@ func (rc *RouteController) reconcile(ctx context.Context, nodes []*v1.Node, rout
 				TargetNode:      nodeName,
 				DestinationCIDR: podCIDR,
 			}
+
 			// cloud providers that:
 			// - depend on nameHint
 			// - trying to support dual stack
@@ -267,9 +268,10 @@ func (rc *RouteController) reconcile(ctx context.Context, nodes []*v1.Node, rout
 		if len(nodeRoutes) == 0 {
 			go func(n *v1.Node) {
 				defer wg.Done()
-				klog.Infof("node %v has no routes assigned to it. NodeNetworkUnavailable will be set to true", n.Name)
-				rc.updateNetworkingCondition(n, false)
+				klog.Infof("node %v has no routes assigned to it", n.Name)
+				rc.updateNetworkingCondition(n, allRoutesCreated)
 			}(node)
+
 			continue
 		}
 
@@ -285,6 +287,7 @@ func (rc *RouteController) reconcile(ctx context.Context, nodes []*v1.Node, rout
 			rc.updateNetworkingCondition(n, allRoutesCreated)
 		}(node)
 	}
+
 	wg.Wait()
 	return nil
 }
