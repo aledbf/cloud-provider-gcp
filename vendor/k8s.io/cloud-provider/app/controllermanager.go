@@ -385,6 +385,12 @@ func StartRouteControllerWrapper(initContext ControllerInitContext, completedCon
 	}
 }
 
+func StartDummyControllerWrapper(initContext ControllerInitContext, completedConfig *cloudcontrollerconfig.CompletedConfig, cloud cloudprovider.Interface) InitFunc {
+	return func(ctx context.Context, controllerContext genericcontrollermanager.ControllerContext) (controller.Interface, bool, error) {
+		return startDummyController(ctx, initContext, completedConfig, cloud)
+	}
+}
+
 // DefaultInitFuncConstructors is a map of default named controller groups paired with InitFuncConstructor
 var DefaultInitFuncConstructors = map[string]ControllerInitFuncConstructor{
 	// The cloud-node controller shares the "node-controller" identity with the cloud-node-lifecycle
@@ -413,6 +419,12 @@ var DefaultInitFuncConstructors = map[string]ControllerInitFuncConstructor{
 			ClientName: "route-controller",
 		},
 		Constructor: StartRouteControllerWrapper,
+	},
+	"dummy": {
+		InitContext: ControllerInitContext{
+			ClientName: "dummy-controller",
+		},
+		Constructor: StartDummyControllerWrapper,
 	},
 }
 

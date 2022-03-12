@@ -26,8 +26,10 @@ import (
 	"net"
 	"strings"
 
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	cloudprovider "k8s.io/cloud-provider"
 	"k8s.io/cloud-provider/app/config"
+	dummycontroller "k8s.io/cloud-provider/controllers/dummy"
 	cloudnodecontroller "k8s.io/cloud-provider/controllers/node"
 	cloudnodelifecyclecontroller "k8s.io/cloud-provider/controllers/nodelifecycle"
 	routecontroller "k8s.io/cloud-provider/controllers/route"
@@ -36,8 +38,6 @@ import (
 	"k8s.io/controller-manager/pkg/features"
 	"k8s.io/klog/v2"
 	netutils "k8s.io/utils/net"
-
-	utilfeature "k8s.io/apiserver/pkg/util/feature"
 )
 
 func startCloudNodeController(ctx context.Context, initContext ControllerInitContext, completedConfig *config.CompletedConfig, cloud cloudprovider.Interface) (controller.Interface, bool, error) {
@@ -141,6 +141,17 @@ func startRouteController(ctx context.Context, initContext ControllerInitContext
 		clusterCIDRs,
 	)
 	go routeController.Run(ctx, completedConfig.ComponentConfig.KubeCloudShared.RouteReconciliationPeriod.Duration)
+
+	return nil, true, nil
+}
+
+func startDummyController(ctx context.Context, initContext ControllerInitContext, completedConfig *config.CompletedConfig, cloud cloudprovider.Interface) (controller.Interface, bool, error) {
+	dummyController := dummycontroller.New(
+		completedConfig.ClientBuilder.ClientOrDie(initContext.ClientName),
+		completedConfig.SharedInformers.Core().V1().Nodes(),
+		completedConfig.ComponentConfig.KubeCloudShared.ClusterName,
+	)
+	go dummyController.Run(ctx, completedConfig.ComponentConfig.KubeCloudShared.RouteReconciliationPeriod.Duration)
 
 	return nil, true, nil
 }
